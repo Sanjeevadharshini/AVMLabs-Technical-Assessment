@@ -22,10 +22,6 @@
 
   <ItemGroup>
     <Folder Include="Controllers\" />
-    <Folder Include="DTOs\Clients\" />
-    <Folder Include="DTOs\Reports\" />
-    <Folder Include="DTOs\Payments\" />
-    <Folder Include="DTOs\WorkOrders\" />
     <Folder Include="Services\Interfaces\" />
   </ItemGroup>
 
