@@ -71,8 +71,8 @@ namespace AVMLabs.Api.Data
                 new WorkOrderItem { WOId = 4, TestId = 3, Quantity = 1, Rate = 750, Amount = 750, SampleStatus = "Received" },
                 new WorkOrderItem { WOId = 4, TestId = 1, Quantity = 1, Rate = 500, Amount = 500, SampleStatus = "Received" },
 
-                new WorkOrderItem { WOId = 5, TestId = 1, Quantity = 2, Rate = 500, Amount = 1000, SampleStatus = "InTransit" },
-                new WorkOrderItem { WOId = 5, TestId = 4, Quantity = 1, Rate = 1000, Amount = 1000, SampleStatus = "InTransit" },
+                new WorkOrderItem { WOId = 5, TestId = 1, Quantity = 2, Rate = 500, Amount = 1000, SampleStatus = "Received" },
+                new WorkOrderItem { WOId = 5, TestId = 4, Quantity = 1, Rate = 1000, Amount = 1000, SampleStatus = "Received" },
                 new WorkOrderItem { WOId = 5, TestId = 7, Quantity = 1, Rate = 300, Amount = 300, SampleStatus = "Received" },
 
                 new WorkOrderItem { WOId = 6, TestId = 9, Quantity = 1, Rate = 1500, Amount = 1500, SampleStatus = "InTransit" },
