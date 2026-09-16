@@ -364,3 +364,5 @@ FodyWeavers.xsd
 
 # Local environment settings
 appsettings.Local.json
+
+Logs/

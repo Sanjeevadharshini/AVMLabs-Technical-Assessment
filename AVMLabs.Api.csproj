@@ -26,10 +26,6 @@
     <Folder Include="DTOs\Reports\" />
     <Folder Include="DTOs\Payments\" />
     <Folder Include="DTOs\WorkOrders\" />
-    <Folder Include="Common\" />
-    <Folder Include="Exceptions\" />
-    <Folder Include="Middleware\" />
-    <Folder Include="Logging\" />
     <Folder Include="Services\Interfaces\" />
   </ItemGroup>
 
