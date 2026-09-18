@@ -172,7 +172,7 @@ INSERT INTO Clients (ClientName, ContactPerson, Phone, Email, City, Country, Cre
 VALUES
 ('ABC Hospital', 'Ramesh Kumar', '9876543210', 'ramesh@abchospital.com', 'Coimbatore', 'India', 50000.00, 1, SYSDATETIME()),
 ('City Care Diagnostics', 'Priya Sharma', '9876543211', 'priya@citycare.com', 'Chennai', 'India', 30000.00, 1, SYSDATETIME()),
-('Apollo Medical Center', 'Arun Kumar', '9876543212', 'arun@apollomedical.com', 'Bangalore', 'India', 75000.00, 1, SYSDATETIME()),
+('Apollo Medical Center', 'Arun Kumar', '9876543212', 'arun@apollomedical.com', 'Bangalore', 'India', 3000.00, 1, SYSDATETIME()),
 ('Green Life Hospital', 'Meena Raj', '9876543213', 'meena@greenlife.com', 'Coimbatore', 'India', 40000.00, 1, SYSDATETIME()),
 ('Sri Ram Diagnostics', 'Karthik Raj', '9876543214', 'karthik@sriramdiagnostics.com', 'Dubai', 'UAE', 45000.00, 1, SYSDATETIME()),
 ('MedCare Hospital', 'Anitha Devi', '9876543215', 'anitha@medcare.com', 'Abu Dhabi', 'UAE', 60000.00, 1, SYSDATETIME()),

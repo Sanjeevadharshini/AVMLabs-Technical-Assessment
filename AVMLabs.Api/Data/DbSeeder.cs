@@ -14,7 +14,7 @@ namespace AVMLabs.Api.Data
             {
                 new Client { ClientName = "ABC Hospital", ContactPerson = "Ramesh Kumar", Phone = "9876543210", Email = "ramesh@abchospital.com", City = "Coimbatore", Country = "India", CreditLimit = 50000, IsActive = true },
                 new Client { ClientName = "City Care Diagnostics", ContactPerson = "Priya Sharma", Phone = "9876543211", Email = "priya@citycare.com", City = "Chennai", Country = "India", CreditLimit = 30000, IsActive = true },
-                new Client { ClientName = "Apollo Medical Center", ContactPerson = "Arun Kumar", Phone = "9876543212", Email = "arun@apollomedical.com", City = "Bangalore", Country = "India", CreditLimit = 75000, IsActive = true },
+                new Client { ClientName = "Apollo Medical Center", ContactPerson = "Arun Kumar", Phone = "9876543212", Email = "arun@apollomedical.com", City = "Bangalore", Country = "India", CreditLimit = 3000, IsActive = true },
                 new Client { ClientName = "Green Life Hospital", ContactPerson = "Meena Raj", Phone = "9876543213", Email = "meena@greenlife.com", City = "Coimbatore", Country = "India", CreditLimit = 40000, IsActive = true },
                 new Client { ClientName = "Sri Ram Diagnostics", ContactPerson = "Karthik Raj", Phone = "9876543214", Email = "karthik@sriramdiagnostics.com", City = "Dubai", Country = "UAE", CreditLimit = 45000, IsActive = true },
                 new Client { ClientName = "MedCare Hospital", ContactPerson = "Anitha Devi", Phone = "9876543215", Email = "anitha@medcare.com", City = "Abu Dhabi", Country = "UAE", CreditLimit = 60000, IsActive = true },
