@@ -14,15 +14,38 @@ namespace AVMLabs.Mvc.Services
 
         public async Task<ApiResponse<T>?> GetAsync<T>(string endpoint)
         {
-            var client = _httpClientFactory.CreateClient("AVMLabsApi");
-            return await client.GetFromJsonAsync<ApiResponse<T>>(endpoint);
+            try
+            {
+                var client = _httpClientFactory.CreateClient("AVMLabsApi");
+                var response = await client.GetAsync(endpoint);
+
+                if (!response.IsSuccessStatusCode)
+                    return null;
+
+                return await response.Content.ReadFromJsonAsync<ApiResponse<T>>();
+            }
+            catch (HttpRequestException)
+            {
+                return null;
+            }
         }
 
         public async Task<ApiResponse<T>?> PostAsync<T>(string endpoint, object data)
         {
-            var client = _httpClientFactory.CreateClient("AVMLabsApi");
-            var response = await client.PostAsJsonAsync(endpoint, data);
-            return await response.Content.ReadFromJsonAsync<ApiResponse<T>>();
+            try
+            {
+                var client = _httpClientFactory.CreateClient("AVMLabsApi");
+                var response = await client.PostAsJsonAsync(endpoint, data);
+
+                if (!response.IsSuccessStatusCode)
+                    return null;
+
+                return await response.Content.ReadFromJsonAsync<ApiResponse<T>>();
+            }
+            catch (HttpRequestException)
+            {
+                return null;
+            }
         }
     }
 }

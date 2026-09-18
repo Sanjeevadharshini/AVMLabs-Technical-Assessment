@@ -14,9 +14,9 @@ builder.Services.AddScoped<ApiService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
+    app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
 
@@ -25,6 +25,8 @@ app.UseRouting();
 
 
 app.UseAuthorization();
+
+app.UseStatusCodePagesWithReExecute("/Home/NotFound");
 
 app.MapStaticAssets();
 
