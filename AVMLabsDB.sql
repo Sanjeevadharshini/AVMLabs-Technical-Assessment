@@ -263,7 +263,7 @@ SELECT C.ClientName, C.City, C.Country, ISNULL(SUM(Inv_Pay.TotalAmount - Inv_Pay
 FROM Clients C
 LEFT JOIN
 (
-    SELECT I.ClientId, I.InvoiceId, I.TotalAmount, ISNULL(SUM(P.NetAmount), 0) AS TotalPaid
+    SELECT I.ClientId, I.InvoiceId, I.TotalAmount, ISNULL(SUM(P.Amount), 0) AS TotalPaid
     FROM Invoices I
     LEFT JOIN Payments P ON P.InvoiceId = I.InvoiceId
     WHERE I.Status = 'Pending'
@@ -400,10 +400,16 @@ GO
 
 ;WITH PendingInvoices AS
 (
-    SELECT ClientId, SUM(TotalAmount) AS PendingInvoiceAmount
-    FROM Invoices
-    WHERE Status = 'Pending'
-    GROUP BY ClientId
+    SELECT I.ClientId, SUM(I.TotalAmount - ISNULL(P.PaidAmount, 0)) AS PendingInvoiceAmount
+    FROM Invoices I
+    OUTER APPLY
+    (
+        SELECT SUM(Amount) AS PaidAmount
+        FROM Payments
+        WHERE InvoiceId = I.InvoiceId
+    ) P
+    WHERE I.Status = 'Pending'
+    GROUP BY I.ClientId
 ),
 InTransitOrders AS
 (
@@ -411,7 +417,7 @@ InTransitOrders AS
     FROM WorkOrders W
     INNER JOIN WorkOrderItems WI ON WI.WOId = W.WOId
     WHERE WI.SampleStatus = 'InTransit'
-    AND NOT EXISTS
+      AND NOT EXISTS
       (
           SELECT 1
           FROM Invoices I

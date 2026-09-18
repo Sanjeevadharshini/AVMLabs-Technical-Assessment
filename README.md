@@ -171,17 +171,14 @@ xUnit + Moq + EF Core InMemory
 
 ### Steps
 
-1.  Clone the repository.
-2.  Open `AVMLabs.slnx` in Visual Studio.
-3.  Verify the SQL Server connection string in
-    `AVMLabs.Api/appsettings.json`.
-4.  Open Visual Studio Package Manager Console.
-5.  Select `AVMLabs.Api` as the Default Project.
-6.  Apply the existing EF Core migrations:
+1. Clone the repository.
+2. Open `AVMLabs.slnx` in Visual Studio.
+3. Verify the SQL Server connection string in
+   `AVMLabs.Api/appsettings.json`.
+4. Build the solution.
 
-``` powershell
-Update-Database
-```
+EF Core migrations are included in the repository and pending migrations
+are automatically applied when the API starts.
 
 The migrations are available under:
 
@@ -191,7 +188,16 @@ AVMLabs.Api/Migrations
 
 ## Run
 
-Run the projects locally from Visual Studio.
+Run both `AVMLabs.Api` and `AVMLabs.Mvc` projects together.
+
+In Visual Studio:
+
+1.  click Debug the solution and select **Startup Project/Profile**.
+2.  Select **Multiple startup projects**.
+3.  Set both projects to **Start**:
+    - `AVMLabs.Api`
+    - `AVMLabs.Mvc`
+4.  Apply the settings and run the solution.
 
 The API automatically:
 
@@ -201,19 +207,14 @@ The API automatically:
 
 No manual seed script execution is required.
 
-Run:
+The application flow is:
 
-``` text
+```text
+AVMLabs.Mvc
+    ↓
 AVMLabs.Api
     ↓
-AVMLabs.Mvc
-```
-
-The MVC application communicates with the API using the configured API
-base URL in:
-
-``` text
-AVMLabs.Mvc/appsettings.json
+SQL Server
 ```
 
 ## SQL File
@@ -271,3 +272,19 @@ Current NBL unit test coverage includes:
 -   API errors are handled through centralized exception middleware.
 -   DTOs/ViewModels are used between application layers instead of
     exposing database entities directly.
+
+### Assumptions
+
+-   Payment Gateway Fee: The assessment requires the gateway fee to be
+    recorded as a separate debit entry in the client ledger, but does not
+    define whether the fee should be deducted from the payment amount.
+    In this implementation, the full payment Amount is applied to the
+    invoice, while GatewayFee is recorded separately as a debit.
+    NetAmount represents Amount minus GatewayFee.
+
+-   Work Order and Invoice: Creating a Work Order does not immediately
+    create an invoice. An invoice is created when the Work Order reaches
+    Billed status. Work Orders/items that remain InTransit are still
+    included in the applicable outstanding/NBL calculation until an
+    invoice exists for that Work Order. This avoids double-counting a
+    Work Order after it has been invoiced.

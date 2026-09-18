@@ -6,6 +6,10 @@
         public decimal CreditLimit { get; set; }
         public decimal TotalOutstanding { get; set; }
         public bool IsNbl { get; set; }
+        public decimal TotalInvoiced { get; set; }
+        public decimal TotalPaid { get; set; }
+        public decimal TotalGatewayFees { get; set; }
+        public decimal NetOutstanding { get; set; }
         public List<LedgerEntryModel> Entries { get; set; } = new();
     }
 

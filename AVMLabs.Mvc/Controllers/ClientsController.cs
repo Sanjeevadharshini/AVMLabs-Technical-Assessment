@@ -69,6 +69,17 @@ namespace AVMLabs.Mvc.Controllers
             return View(response.Data);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> LedgerData(int id)
+        {
+            var response = await _apiService.GetAsync<LedgerResponseModel>($"api/clients/{id}/ledger");
+
+            if (response == null || !response.Success || response.Data == null)
+                return BadRequest(new { success = false, message = "Unable to load ledger." });
+
+            return Ok(response.Data);
+        }
+
         [HttpPost]
         public async Task<IActionResult> RecordPayment([FromBody] CreatePaymentModel model)
         {

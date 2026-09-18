@@ -30,7 +30,7 @@
             <div class="card shadow-sm h-100">
                 <div class="card-body">
                     <h6 class="text-muted">Total Outstanding</h6>
-                    <h4>₹@Model.TotalOutstanding.ToString("N2")</h4>
+                    <h4 id="totalOutstanding">₹@Model.TotalOutstanding.ToString("N2")</h4>
                 </div>
             </div>
         </div>
@@ -39,14 +39,9 @@
             <div class="card shadow-sm h-100">
                 <div class="card-body">
                     <h6 class="text-muted">NBL Status</h6>
-                    @if (Model.IsNbl)
-                    {
-                        <span class="badge bg-success fs-6">NBL</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-danger fs-6">Non-NBL</span>
-                    }
+                    <span id="nblStatus" class="badge @(Model.IsNbl ? "bg-success" : "bg-danger") fs-6">
+                        @(Model.IsNbl ? "NBL" : "Non-NBL")
+                    </span>
                 </div>
             </div>
         </div>
@@ -87,7 +82,7 @@
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h6 class="text-muted">Total Invoiced</h6>
-                    <h5>₹@totalInvoiced.ToString("N2")</h5>
+                    <h5 id="totalInvoiced">₹@totalInvoiced.ToString("N2")</h5>
                 </div>
             </div>
         </div>
@@ -96,7 +91,7 @@
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h6 class="text-muted">Total Paid</h6>
-                    <h5>₹@totalPaid.ToString("N2")</h5>
+                    <h5 id="totalPaid">₹@totalPaid.ToString("N2")</h5>
                 </div>
             </div>
         </div>
@@ -105,7 +100,7 @@
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h6 class="text-muted">Total Gateway Fees</h6>
-                    <h5>₹@totalGatewayFees.ToString("N2")</h5>
+                    <h5 id="totalGatewayFees">₹@totalGatewayFees.ToString("N2")</h5>
                 </div>
             </div>
         </div>
@@ -114,7 +109,7 @@
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h6 class="text-muted">Net Outstanding</h6>
-                    <h5>₹@Model.TotalOutstanding.ToString("N2")</h5>
+                    <h5 id="netOutstanding">₹@Model.NetOutstanding.ToString("N2")</h5>
                 </div>
             </div>
         </div>
@@ -165,7 +160,6 @@
     </div>
 </div>
 
-
 @section Scripts {
     <script>
         const clientId = @Context.Request.RouteValues["id"];
@@ -177,6 +171,50 @@
         function calculateGatewayFee() {
             const amount = parseFloat(paymentAmount.value) || 0;
             gatewayFee.value = paymentMode.value === "Online" ? (amount * 0.02).toFixed(2) : "0.00";
+        }
+
+        function formatAmount(value) {
+            return Number(value).toLocaleString("en-IN", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function formatDate(value) {
+            const date = new Date(value);
+            return date.toLocaleDateString("en-GB");
+        }
+
+        function getEntryClass(entryType) {
+            if (entryType === "Invoice")
+                return "table-danger";
+
+            if (entryType === "Payment")
+                return "table-success";
+
+            return "table-warning";
+        }
+
+        function updateLedger(ledger) {
+            document.getElementById("ledgerBody").innerHTML = ledger.entries.map(entry => `
+                <tr class="${getEntryClass(entry.entryType)}">
+                    <td>${formatDate(entry.date)}</td>
+                    <td>${entry.description}</td>
+                    <td>₹${formatAmount(entry.debit)}</td>
+                    <td>₹${formatAmount(entry.credit)}</td>
+                    <td>₹${formatAmount(entry.runningBalance)}</td>
+                </tr>
+            `).join("");
+
+            document.getElementById("totalOutstanding").textContent = `₹${formatAmount(ledger.totalOutstanding)}`;
+            document.getElementById("totalInvoiced").textContent = `₹${formatAmount(ledger.totalInvoiced)}`;
+            document.getElementById("totalPaid").textContent = `₹${formatAmount(ledger.totalPaid)}`;
+            document.getElementById("totalGatewayFees").textContent = `₹${formatAmount(ledger.totalGatewayFees)}`;
+            document.getElementById("netOutstanding").textContent = `₹${formatAmount(ledger.netOutstanding)}`;
+
+            const nblStatus = document.getElementById("nblStatus");
+            nblStatus.textContent = ledger.isNbl ? "NBL" : "Non-NBL";
+            nblStatus.className = `badge ${ledger.isNbl ? "bg-success" : "bg-danger"} fs-6`;
         }
 
         paymentMode.addEventListener("change", calculateGatewayFee);
@@ -208,14 +246,31 @@
                 })
             });
 
-           const result = await response.json();
+            const result = await response.json();
 
             if (!response.ok || !result.success) {
                 error.textContent = result.message || "Failed to record payment.";
                 return;
             }
 
-            window.location.reload();
+            const ledgerResponse = await fetch(`/Clients/LedgerData?id=${clientId}`);
+
+            if (!ledgerResponse.ok) {
+                error.textContent = "Payment recorded, but unable to refresh ledger.";
+                return;
+            }
+
+            const ledger = await ledgerResponse.json();
+
+            updateLedger(ledger);
+
+            paymentAmount.value = "";
+            paymentMode.value = "Cash";
+            gatewayFee.value = "0.00";
+            error.textContent = "";
+
+            const modal = bootstrap.Modal.getInstance(document.getElementById("paymentModal"));
+            modal.hide();
         });
     </script>
 }
