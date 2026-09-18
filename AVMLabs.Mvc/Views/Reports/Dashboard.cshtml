@@ -1,0 +1,156 @@
+﻿@model AVMLabs.Mvc.Models.Reports.DashboardModel
+@inject IConfiguration Configuration
+
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Dashboard</h2>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" action="/Reports/Dashboard" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">From Date</label>
+                    <input type="date" name="fromDate" class="form-control" value="@Model.FromDate.ToString("yyyy-MM-dd")" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">To Date</label>
+                    <input type="date" name="toDate" class="form-control" value="@Model.ToDate.ToString("yyyy-MM-dd")" />
+                </div>
+
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary">
+                        Refresh
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted">Total WOs</h6>
+                    <h3>@Model.TotalWorkOrders</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Revenue</h6>
+                    <h3>₹@Model.TotalRevenue.ToString("N2")</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted">Clients Over Credit Limit</h6>
+                    <h3>@Model.ClientsOverCreditLimit</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="mb-3">Daily Revenue</h5>
+            <div style="height: 350px;">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="mb-3">Top 5 Clients by Outstanding</h5>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Client Name</th>
+                            <th>Credit Limit</th>
+                            <th>Outstanding</th>
+                            <th>Excess</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @if (Model.OutstandingClients.Any())
+                        {
+                            @foreach (var client in Model.OutstandingClients)
+                            {
+                                <tr>
+                                    <td>@client.ClientName</td>
+                                    <td>₹@client.CreditLimit.ToString("N2")</td>
+                                    <td>₹@client.CurrentOutstanding.ToString("N2")</td>
+                                    <td>₹@client.ExcessAmount.ToString("N2")</td>
+                                    <td>
+                                        <a href="/Clients/Ledger/@client.ClientId" class="btn btn-sm btn-primary">
+                                            View Ledger
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">
+                                    No clients are over their credit limit.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        const chartData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                                    Model.DailySummary.Select(x => new
+                            {
+                                            date = x.Date.ToString("dd-MM-yyyy"),
+                                            revenue = x.Revenue
+                            })
+                    ));
+
+        const ctx = document.getElementById("revenueChart");
+
+        new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: chartData.map(x => x.date),
+                datasets: [{
+                    label: "Daily Revenue",
+                    data: chartData.map(x => x.revenue)
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+}

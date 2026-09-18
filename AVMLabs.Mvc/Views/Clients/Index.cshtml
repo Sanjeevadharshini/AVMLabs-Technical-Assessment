@@ -1,0 +1,1415 @@
+﻿@model List<AVMLabs.Mvc.Models.Clients.ClientResponseModel>
+@inject IConfiguration Configuration
+
+@{
+    ViewData["Title"] = "Clients";
+}
+
+<div class="container-fluid py-4">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+
+        <h2 class="mb-0">Clients</h2>
+
+        <button type="button"
+                class="btn btn-success"
+                id="addClientBtn">
+
+            <i class="bi bi-plus-lg me-1"></i>
+            Add Client
+
+        </button>
+
+    </div>
+
+    <div class="card shadow-sm">
+
+        <div class="card-body">
+
+            <form id="clientFilterForm"
+                  class="row g-2 align-items-end mb-3">
+
+                <div class="col-12 col-md-6 col-lg-4">
+
+                    <label class="form-label">
+                        Client Name
+                    </label>
+
+                    <input type="text"
+                           id="searchInput"
+                           name="search"
+                           value="@ViewBag.Search"
+                           class="form-control"
+                           placeholder="Search by client name" />
+
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-3">
+
+                    <label class="form-label">
+                        Country
+                    </label>
+
+                    <div class="position-relative ng-select-wrapper">
+
+                        <input type="text"
+                               id="countrySearch"
+                               class="form-control pe-5"
+                               placeholder="Search or select country"
+                               autocomplete="off"
+                               value="@ViewBag.Country" />
+
+                        <button type="button"
+                                id="clearCountry"
+                                class="btn btn-sm text-secondary position-absolute top-50 end-0 translate-middle-y me-1 p-0 px-2 d-none"
+                                title="Clear country">
+
+                            <span style="font-size: 22px; line-height: 1;">
+                                &times;
+                            </span>
+
+                        </button>
+
+                        <div id="countryDropdown"
+                             class="dropdown-menu w-100 p-0"
+                             style="max-height: 220px; overflow-y: auto;">
+                        </div>
+
+                    </div>
+
+                    <input type="hidden"
+                           id="countryInput"
+                           name="country"
+                           value="@ViewBag.Country" />
+
+                </div>
+
+                <div class="col-6 col-md-3 col-lg-2">
+
+                    <label class="form-label">
+                        Display Length
+                    </label>
+
+                    <select id="pageSizeInput"
+                            name="length"
+                            class="form-select">
+
+                        <option value="10"
+                                selected="@(ViewBag.PageSize == 10)">
+                            10
+                        </option>
+
+                        <option value="20"
+                                selected="@(ViewBag.PageSize == 20)">
+                            20
+                        </option>
+
+                        <option value="50"
+                                selected="@(ViewBag.PageSize == 50)">
+                            50
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div class="col-6 col-md-3 col-lg-1">
+
+                    <button type="submit"
+                            class="btn btn-primary w-100"
+                            id="searchBtn">
+
+                        Search
+
+                    </button>
+
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-2">
+
+                    <button type="button"
+                            class="btn btn-outline-secondary w-100"
+                            id="clearBtn">
+
+                        Clear Filters
+
+                    </button>
+
+                </div>
+
+            </form>
+
+            <div id="clientListContainer">
+
+                @await Html.PartialAsync("_ClientList", Model)
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="modal fade"
+     id="clientModal"
+     tabindex="-1">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h5 class="modal-title"
+                    id="clientModalTitle">
+
+                    Add Client
+
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <form id="clientForm"
+                      novalidate>
+
+                    <input type="hidden"
+                           id="clientId" />
+
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+
+                            <label class="form-label">
+                                Client Name
+                            </label>
+
+                            <input type="text"
+                                   id="clientName"
+                                   class="form-control"
+                                   placeholder="e.g. ABC Hospital" />
+
+                            <div class="text-danger small"
+                                 id="clientNameError">
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6">
+
+                            <label class="form-label">
+                                Contact Person
+                            </label>
+
+                            <input type="text"
+                                   id="contactPerson"
+                                   class="form-control"
+                                   placeholder="e.g. Ramesh Kumar" />
+
+                            <div class="text-danger small"
+                                 id="contactPersonError">
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6">
+
+                            <label class="form-label">
+                                Phone
+                            </label>
+
+                            <input type="text"
+                                   id="phone"
+                                   class="form-control"
+                                   placeholder="e.g. 9876543210" />
+
+                            <div class="text-danger small"
+                                 id="phoneError">
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6">
+
+                            <label class="form-label">
+                                Email
+                            </label>
+
+                            <input type="email"
+                                   id="email"
+                                   class="form-control"
+                                   placeholder="e.g. name@example.com" />
+
+                            <div class="text-danger small"
+                                 id="emailError">
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6">
+
+                            <label class="form-label">
+                                City
+                            </label>
+
+                            <input type="text"
+                                   id="city"
+                                   class="form-control"
+                                   placeholder="e.g. Coimbatore" />
+
+                            <div class="text-danger small"
+                                 id="cityError">
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6">
+
+                            <label class="form-label">
+                                Country
+                            </label>
+
+                            <input type="text"
+                                   id="clientCountry"
+                                   class="form-control"
+                                   placeholder="e.g. India" />
+
+                            <div class="text-danger small"
+                                 id="clientCountryError">
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6">
+
+                            <label class="form-label">
+                                Credit Limit
+                            </label>
+
+                            <input type="number"
+                                   id="creditLimit"
+                                   class="form-control"
+                                   placeholder="e.g. 50000"
+                                   min="0.01"
+                                   step="0.01" />
+
+                            <div class="text-danger small"
+                                 id="creditLimitError">
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div id="clientFormError"
+                         class="text-danger mt-3">
+                    </div>
+
+                </form>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+
+                    Cancel
+
+                </button>
+
+                <button type="button"
+                        class="btn btn-success"
+                        id="saveClientBtn">
+
+                    <span id="saveClientSpinner"
+                          class="spinner-border spinner-border-sm d-none me-2">
+                    </span>
+
+                    <span id="saveClientText">
+                        Save Client
+                    </span>
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="position-fixed top-0 end-0 p-3"
+     style="z-index: 1100">
+
+    <div id="clientToast"
+         class="toast"
+         role="alert">
+
+        <div class="toast-header">
+
+            <strong class="me-auto"
+                    id="toastTitle">
+
+                Success
+
+            </strong>
+
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="toast">
+            </button>
+
+        </div>
+
+        <div class="toast-body"
+             id="toastMessage">
+        </div>
+
+    </div>
+
+</div>
+
+<div id="pageLoader"
+     class="position-fixed top-0 start-0 w-100 h-100 d-none"
+     style="background: rgba(255,255,255,.6); z-index: 1050;">
+
+    <div class="d-flex justify-content-center align-items-center h-100">
+
+        <div class="spinner-border text-primary"
+             role="status">
+        </div>
+
+    </div>
+
+</div>
+
+<style>
+
+    .ng-select-wrapper .dropdown-item {
+        cursor: pointer;
+    }
+
+    .ng-select-wrapper .dropdown-item:hover,
+    .ng-select-wrapper .dropdown-item.active {
+        background-color: #f0f4ff;
+    }
+
+    #countryDropdown.show {
+        display: block;
+    }
+
+    #clearCountry {
+        border: 0;
+        background: transparent;
+    }
+
+    #clearCountry:hover {
+        color: #dc3545 !important;
+    }
+
+</style>
+
+@section Scripts {
+
+    <script>
+
+        const apiBaseUrl = "@Configuration["ApiSettings:BaseUrl"]";
+
+        const clientModal =
+            new bootstrap.Modal(
+                document.getElementById("clientModal")
+            );
+
+        const toast =
+            new bootstrap.Toast(
+                document.getElementById("clientToast")
+            );
+
+        const countries =
+            @Html.Raw(
+                System.Text.Json.JsonSerializer.Serialize(
+                    ViewBag.Countries
+                )
+            );
+
+        let currentPage = @ViewBag.CurrentPage;
+
+        let currentPageSize = @ViewBag.PageSize;
+
+        let currentSearch = "@ViewBag.Search";
+
+        let currentCountry = "@ViewBag.Country";
+
+        function showLoader() {
+
+            document
+                .getElementById("pageLoader")
+                .classList
+                .remove("d-none");
+
+        }
+
+        function hideLoader() {
+
+            document
+                .getElementById("pageLoader")
+                .classList
+                .add("d-none");
+
+        }
+
+        function showToast(
+            title,
+            message,
+            isError = false
+        ) {
+
+            const toastEl =
+                document.getElementById("clientToast");
+
+            toastEl.classList.remove(
+                "text-bg-danger",
+                "text-bg-success"
+            );
+
+            toastEl.classList.add(
+                isError
+                    ? "text-bg-danger"
+                    : "text-bg-success"
+            );
+
+            document.getElementById(
+                "toastTitle"
+            ).textContent = title;
+
+            document.getElementById(
+                "toastMessage"
+            ).textContent = message;
+
+            toast.show();
+
+        }
+
+        function clearErrors() {
+
+            document
+                .querySelectorAll(
+                    "#clientForm .text-danger"
+                )
+                .forEach(x => x.textContent = "");
+
+            document.getElementById(
+                "clientFormError"
+            ).textContent = "";
+
+        }
+
+        function resetClientForm() {
+
+            document
+                .getElementById("clientForm")
+                .reset();
+
+            document.getElementById(
+                "clientId"
+            ).value = "";
+
+            clearErrors();
+
+        }
+
+        function openAddClient() {
+
+            resetClientForm();
+
+            document.getElementById(
+                "clientModalTitle"
+            ).textContent = "Add Client";
+
+            document.getElementById(
+                "saveClientText"
+            ).textContent = "Save Client";
+
+            clientModal.show();
+
+        }
+
+        async function openEditClient(id) {
+
+            showLoader();
+
+            try {
+
+                const response =
+                    await fetch(
+                        `${apiBaseUrl}api/clients`
+                    );
+
+                if (!response.ok)
+                    throw new Error(
+                        "Unable to load client details."
+                    );
+
+                const result =
+                    await response.json();
+
+                const client =
+                    result.data.find(
+                        x => x.clientId === id
+                    );
+
+                if (!client)
+                    throw new Error(
+                        "Client not found."
+                    );
+
+                clearErrors();
+
+                document.getElementById(
+                    "clientId"
+                ).value = client.clientId;
+
+                document.getElementById(
+                    "clientName"
+                ).value = client.clientName;
+
+                document.getElementById(
+                    "contactPerson"
+                ).value = client.contactPerson;
+
+                document.getElementById(
+                    "phone"
+                ).value = client.phone;
+
+                document.getElementById(
+                    "email"
+                ).value = client.email;
+
+                document.getElementById(
+                    "city"
+                ).value = client.city;
+
+                document.getElementById(
+                    "clientCountry"
+                ).value = client.country;
+
+                document.getElementById(
+                    "creditLimit"
+                ).value = client.creditLimit;
+
+                document.getElementById(
+                    "clientModalTitle"
+                ).textContent = "Edit Client";
+
+                document.getElementById(
+                    "saveClientText"
+                ).textContent = "Update Client";
+
+                clientModal.show();
+
+            }
+            catch (error) {
+
+                showToast(
+                    "Error",
+                    error.message,
+                    true
+                );
+
+            }
+            finally {
+
+                hideLoader();
+
+            }
+
+        }
+
+        async function refreshClientList(page = 1) {
+
+            currentPage = page;
+
+            const params =
+                new URLSearchParams({
+                    search: currentSearch,
+                    country: currentCountry,
+                    page: currentPage,
+                    length: currentPageSize,
+                    ajax: "true"
+                });
+
+            showLoader();
+
+            try {
+
+                const response =
+                    await fetch(
+                        '@Url.Action("Index", "Clients")?' +
+                        params.toString(),
+                        {
+                            headers: {
+                                "X-Requested-With":
+                                    "XMLHttpRequest"
+                            }
+                        }
+                    );
+
+                if (!response.ok)
+                    throw new Error(
+                        `Unable to refresh client list. (${response.status})`
+                    );
+
+                document.getElementById(
+                    "clientListContainer"
+                ).innerHTML =
+                    await response.text();
+
+            }
+            catch (error) {
+
+                showToast(
+                    "Error",
+                    error.message,
+                    true
+                );
+
+            }
+            finally {
+
+                hideLoader();
+
+            }
+
+        }
+
+        function setSaveLoading(loading) {
+
+            const button =
+                document.getElementById(
+                    "saveClientBtn"
+                );
+
+            const spinner =
+                document.getElementById(
+                    "saveClientSpinner"
+                );
+
+            const text =
+                document.getElementById(
+                    "saveClientText"
+                );
+
+            button.disabled = loading;
+
+            spinner.classList.toggle(
+                "d-none",
+                !loading
+            );
+
+            text.textContent =
+                loading
+                    ? "Saving..."
+                    : (
+                        document.getElementById(
+                            "clientId"
+                        ).value
+                            ? "Update Client"
+                            : "Save Client"
+                    );
+
+        }
+
+        function validateClientForm(data) {
+
+            let isValid = true;
+
+            if (!data.clientName) {
+
+                document.getElementById(
+                    "clientNameError"
+                ).textContent =
+                    "Client name is required.";
+
+                isValid = false;
+
+            }
+
+            if (!data.contactPerson) {
+
+                document.getElementById(
+                    "contactPersonError"
+                ).textContent =
+                    "Contact person is required.";
+
+                isValid = false;
+
+            }
+
+            if (!data.phone) {
+
+                document.getElementById(
+                    "phoneError"
+                ).textContent =
+                    "Phone is required.";
+
+                isValid = false;
+
+            }
+
+            if (!data.email) {
+
+                document.getElementById(
+                    "emailError"
+                ).textContent =
+                    "Email is required.";
+
+                isValid = false;
+
+            }
+            else if (
+                !/^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/
+                    .test(data.email)
+            ) {
+
+                document.getElementById(
+                    "emailError"
+                ).textContent =
+                    "Enter a valid email address.";
+
+                isValid = false;
+
+            }
+
+            if (!data.city) {
+
+                document.getElementById(
+                    "cityError"
+                ).textContent =
+                    "City is required.";
+
+                isValid = false;
+
+            }
+
+            if (!data.country) {
+
+                document.getElementById(
+                    "clientCountryError"
+                ).textContent =
+                    "Country is required.";
+
+                isValid = false;
+
+            }
+
+            if (
+                !data.creditLimit ||
+                data.creditLimit <= 0
+            ) {
+
+                document.getElementById(
+                    "creditLimitError"
+                ).textContent =
+                    "Credit limit must be greater than 0.";
+
+                isValid = false;
+
+            }
+
+            return isValid;
+
+        }
+
+        async function saveClient() {
+
+            clearErrors();
+
+            const id =
+                Number(
+                    document.getElementById(
+                        "clientId"
+                    ).value
+                );
+
+            const data = {
+
+                clientName:
+                    document.getElementById(
+                        "clientName"
+                    ).value.trim(),
+
+                contactPerson:
+                    document.getElementById(
+                        "contactPerson"
+                    ).value.trim(),
+
+                phone:
+                    document.getElementById(
+                        "phone"
+                    ).value.trim(),
+
+                email:
+                    document.getElementById(
+                        "email"
+                    ).value.trim(),
+
+                city:
+                    document.getElementById(
+                        "city"
+                    ).value.trim(),
+
+                country:
+                    document.getElementById(
+                        "clientCountry"
+                    ).value.trim(),
+
+                creditLimit:
+                    Number(
+                        document.getElementById(
+                            "creditLimit"
+                        ).value
+                    )
+
+            };
+
+            if (!validateClientForm(data))
+                return;
+
+            setSaveLoading(true);
+
+            try {
+
+                const url =
+                    id > 0
+                        ? `${apiBaseUrl}api/clients/${id}`
+                        : `${apiBaseUrl}api/clients`;
+
+                const method =
+                    id > 0
+                        ? "PUT"
+                        : "POST";
+
+                const response =
+                    await fetch(
+                        url,
+                        {
+                            method: method,
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+                            body:
+                                JSON.stringify(data)
+                        }
+                    );
+
+                const result =
+                    await response.json();
+
+                if (
+                    !response.ok ||
+                    !result.success
+                ) {
+
+                    document.getElementById(
+                        "clientFormError"
+                    ).textContent =
+                        result.message ||
+                        "Unable to save client.";
+
+                    return;
+
+                }
+
+                clientModal.hide();
+
+                showToast(
+                    "Success",
+                    id > 0
+                        ? "Client updated successfully."
+                        : "Client created successfully."
+                );
+
+                await refreshClientList(
+                    currentPage
+                );
+
+            }
+            catch (error) {
+
+                document.getElementById(
+                    "clientFormError"
+                ).textContent =
+                    error.message;
+
+            }
+            finally {
+
+                setSaveLoading(false);
+
+            }
+
+        }
+
+        async function toggleClient(id) {
+
+            if (
+                !confirm(
+                    "Are you sure you want to change this client's status?"
+                )
+            )
+                return;
+
+            showLoader();
+
+            try {
+
+                const response =
+                    await fetch(
+                        `${apiBaseUrl}api/clients/${id}/toggle`,
+                        {
+                            method: "PUT"
+                        }
+                    );
+
+                const result =
+                    await response.json();
+
+                if (
+                    !response.ok ||
+                    !result.success
+                )
+                    throw new Error(
+                        result.message ||
+                        "Unable to change client status."
+                    );
+
+                showToast(
+                    "Success",
+                    "Client status updated successfully."
+                );
+
+                await refreshClientList(
+                    currentPage
+                );
+
+            }
+            catch (error) {
+
+                showToast(
+                    "Error",
+                    error.message,
+                    true
+                );
+
+                hideLoader();
+
+            }
+
+        }
+
+        function setupCountryDropdown() {
+
+            const input =
+                document.getElementById(
+                    "countrySearch"
+                );
+
+            const dropdown =
+                document.getElementById(
+                    "countryDropdown"
+                );
+
+            const hidden =
+                document.getElementById(
+                    "countryInput"
+                );
+
+            const clear =
+                document.getElementById(
+                    "clearCountry"
+                );
+
+            function renderCountries(
+                search = ""
+            ) {
+
+                const filtered =
+                    countries.filter(
+                        x =>
+                            x
+                                .toLowerCase()
+                                .includes(
+                                    search.toLowerCase()
+                                )
+                    );
+
+                dropdown.innerHTML = "";
+
+                if (!filtered.length) {
+
+                    dropdown.innerHTML =
+                        '<div class="dropdown-item text-muted disabled">No countries found</div>';
+
+                    return;
+
+                }
+
+                filtered.forEach(country => {
+
+                    const button =
+                        document.createElement(
+                            "button"
+                        );
+
+                    button.type = "button";
+
+                    button.className =
+                        "dropdown-item" +
+                        (
+                            country === hidden.value
+                                ? " active"
+                                : ""
+                        );
+
+                    button.textContent =
+                        country;
+
+                    button.addEventListener(
+                        "mousedown",
+                        event => {
+
+                            event.preventDefault();
+
+                            input.value =
+                                country;
+
+                            hidden.value =
+                                country;
+
+                            clear.classList.remove(
+                                "d-none"
+                            );
+
+                            dropdown.classList.remove(
+                                "show"
+                            );
+
+                        }
+                    );
+
+                    dropdown.appendChild(
+                        button
+                    );
+
+                });
+
+            }
+
+            input.addEventListener(
+                "focus",
+                () => {
+
+                    renderCountries(
+                        input.value
+                    );
+
+                    dropdown.classList.add(
+                        "show"
+                    );
+
+                }
+            );
+
+            input.addEventListener(
+                "input",
+                () => {
+
+                    hidden.value = "";
+
+                    clear.classList.add(
+                        "d-none"
+                    );
+
+                    renderCountries(
+                        input.value
+                    );
+
+                    dropdown.classList.add(
+                        "show"
+                    );
+
+                }
+            );
+
+            clear.addEventListener(
+                "mousedown",
+                event => {
+
+                    event.preventDefault();
+
+                    input.value = "";
+
+                    hidden.value = "";
+
+                    clear.classList.add(
+                        "d-none"
+                    );
+
+                    input.focus();
+
+                    renderCountries();
+
+                    dropdown.classList.add(
+                        "show"
+                    );
+
+                }
+            );
+
+            function closeDropdownAndSync() {
+
+                dropdown.classList.remove(
+                    "show"
+                );
+
+                input.value =
+                    hidden.value;
+
+                clear.classList.toggle(
+                    "d-none",
+                    !hidden.value
+                );
+
+            }
+
+            document.addEventListener(
+                "click",
+                event => {
+
+                    if (
+                        !input.parentElement
+                            .contains(event.target)
+                    )
+                        closeDropdownAndSync();
+
+                }
+            );
+
+            document.addEventListener(
+                "keydown",
+                event => {
+
+                    if (
+                        event.key === "Escape"
+                    )
+                        closeDropdownAndSync();
+
+                }
+            );
+
+            input.addEventListener(
+                "blur",
+                () => {
+
+                    setTimeout(
+                        () => {
+
+                            if (
+                                !dropdown.matches(
+                                    ":hover"
+                                )
+                            )
+                                closeDropdownAndSync();
+
+                        },
+                        200
+                    );
+
+                }
+            );
+
+            if (hidden.value)
+                clear.classList.remove(
+                    "d-none"
+                );
+
+        }
+
+        document
+            .getElementById(
+                "addClientBtn"
+            )
+            .addEventListener(
+                "click",
+                openAddClient
+            );
+
+        document
+            .getElementById(
+                "saveClientBtn"
+            )
+            .addEventListener(
+                "click",
+                saveClient
+            );
+
+        document
+            .getElementById(
+                "clientFilterForm"
+            )
+            .addEventListener(
+                "submit",
+                async event => {
+
+                    event.preventDefault();
+
+                    currentSearch =
+                        document.getElementById(
+                            "searchInput"
+                        ).value.trim();
+
+                    currentCountry =
+                        document.getElementById(
+                            "countryInput"
+                        ).value;
+
+                    currentPageSize =
+                        Number(
+                            document.getElementById(
+                                "pageSizeInput"
+                            ).value
+                        );
+
+                    await refreshClientList(1);
+
+                }
+            );
+
+        document
+            .getElementById(
+                "clearBtn"
+            )
+            .addEventListener(
+                "click",
+                async () => {
+
+                    document.getElementById(
+                        "searchInput"
+                    ).value = "";
+
+                    document.getElementById(
+                        "countrySearch"
+                    ).value = "";
+
+                    document.getElementById(
+                        "countryInput"
+                    ).value = "";
+
+                    document.getElementById(
+                        "clearCountry"
+                    ).classList.add(
+                        "d-none"
+                    );
+
+                    document.getElementById(
+                        "pageSizeInput"
+                    ).value = "10";
+
+                    currentSearch = "";
+
+                    currentCountry = "";
+
+                    currentPageSize = 10;
+
+                    await refreshClientList(1);
+
+                }
+            );
+
+        document
+            .getElementById(
+                "pageSizeInput"
+            )
+            .addEventListener(
+                "change",
+                async () => {
+
+                    currentPageSize =
+                        Number(
+                            document.getElementById(
+                                "pageSizeInput"
+                            ).value
+                        );
+
+                    await refreshClientList(1);
+
+                }
+            );
+
+        document
+            .getElementById(
+                "clientListContainer"
+            )
+            .addEventListener(
+                "click",
+                async event => {
+
+                    const editButton =
+                        event.target.closest(
+                            ".edit-client"
+                        );
+
+                    const toggleButton =
+                        event.target.closest(
+                            ".toggle-client"
+                        );
+
+                    const paginationLink =
+                        event.target.closest(
+                            ".pagination-link"
+                        );
+
+                    if (editButton)
+                        await openEditClient(
+                            Number(
+                                editButton.dataset.id
+                            )
+                        );
+
+                    if (toggleButton)
+                        await toggleClient(
+                            Number(
+                                toggleButton.dataset.id
+                            )
+                        );
+
+                    if (paginationLink) {
+
+                        event.preventDefault();
+
+                        await refreshClientList(
+                            Number(
+                                paginationLink.dataset.page
+                            )
+                        );
+
+                    }
+
+                }
+            );
+
+        setupCountryDropdown();
+
+    </script>
+}

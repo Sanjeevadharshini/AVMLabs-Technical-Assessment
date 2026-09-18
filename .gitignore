@@ -1,0 +1,68 @@
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.rsuser
+
+# .NET build output
+**/bin/
+**/obj/
+**/Debug/
+**/Release/
+**/TestResults/
+
+# .NET / NuGet
+packages/
+*.nupkg
+*.snupkg
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Logs
+**/Logs/
+*.log
+
+# Test coverage
+coverage/
+coverage*.json
+coverage*.xml
+coverage*.info
+*.coverage
+*.coveragexml
+
+# User-specific local configuration
+**/appsettings.Local.json
+**/secrets.json
+
+# Publish / deployment files
+*.publish.xml
+*.pubxml
+*.publishproj
+PublishScripts/
+
+# Certificates / private keys
+*.pfx
+*.p12
+
+# SQL Server local database files
+*.mdf
+*.ldf
+*.ndf
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*~
+~$*
+
+# ReSharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user

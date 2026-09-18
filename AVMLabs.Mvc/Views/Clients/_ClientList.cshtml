@@ -1,0 +1,101 @@
+﻿@model List<AVMLabs.Mvc.Models.Clients.ClientResponseModel>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-hover align-middle mb-0">
+        <thead class="table-dark">
+            <tr>
+                <th>S.No</th>
+                <th>Client Name</th>
+                <th>City</th>
+                <th>Country</th>
+                <th>Credit Limit</th>
+                <th>Outstanding Balance</th>
+                <th>NBL Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+      <tbody>
+            @if (Model.Any())
+            {
+                for (var i = 0; i < Model.Count; i++)
+                {
+                    var client = Model[i];
+                    var serialNo = ((ViewBag.CurrentPage - 1) * ViewBag.PageSize) + i + 1;
+
+                    <tr>
+                        <td>@serialNo</td>
+                        <td>@client.ClientName</td>
+                        <td>@client.City</td>
+                        <td>@client.Country</td>
+                        <td>₹@client.CreditLimit.ToString("N2")</td>
+                        <td>₹@client.OutstandingBalance.ToString("N2")</td>
+                        <td>
+                            @if (client.IsNbl)
+                            {
+                                <span class="badge bg-success">NBL</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Non-NBL</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-1">
+                                <a href="/Clients/Ledger/@client.ClientId" class="btn btn-sm btn-primary">View Ledger</a>
+                                <button type="button" class="btn btn-sm btn-warning edit-client" data-id="@client.ClientId">Edit</button>
+                                <button type="button" class="btn btn-sm btn-secondary toggle-client" data-id="@client.ClientId">
+                                    @(client.IsActive ? "Deactivate" : "Activate")
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-4">No clients found.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+    <div class="text-muted small">
+        @if (ViewBag.TotalRecords > 0)
+        {
+            var startRecord = ((ViewBag.CurrentPage - 1) * ViewBag.PageSize) + 1;
+            var endRecord = Math.Min(ViewBag.CurrentPage * ViewBag.PageSize, ViewBag.TotalRecords);
+            <span>Showing @startRecord–@endRecord of @ViewBag.TotalRecords clients</span>
+        }
+        else
+        {
+            <span>No records</span>
+        }
+    </div>
+
+    <div class="btn-group" role="group" aria-label="Pagination">
+        @if (ViewBag.CurrentPage <= 1)
+        {
+            <button type="button" class="btn btn-sm btn-outline-secondary" disabled>&laquo; Previous</button>
+        }
+        else
+        {
+            <button type="button" class="btn btn-sm btn-outline-secondary pagination-link" data-page="@(ViewBag.CurrentPage - 1)">&laquo; Previous</button>
+        }
+
+        <button type="button" class="btn btn-sm btn-outline-secondary" disabled style="pointer-events: none;">
+            Page @ViewBag.CurrentPage of @ViewBag.TotalPages
+        </button>
+
+        @if (ViewBag.CurrentPage >= ViewBag.TotalPages)
+        {
+            <button type="button" class="btn btn-sm btn-outline-secondary" disabled>Next &raquo;</button>
+        }
+        else
+        {
+            <button type="button" class="btn btn-sm btn-outline-secondary pagination-link" data-page="@(ViewBag.CurrentPage + 1)">Next &raquo;</button>
+        }
+    </div>
+</div>

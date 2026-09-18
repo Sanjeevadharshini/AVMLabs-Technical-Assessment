@@ -1,0 +1,903 @@
+﻿@model AVMLabs.Mvc.Models.WorkOrders.CreateWorkOrderModel
+@inject IConfiguration Configuration
+
+@{
+    ViewData["Title"] = "Create Work Order";
+    var clients = ViewBag.Clients as List<AVMLabs.Mvc.Models.Clients.ClientResponseModel> ?? new();
+    var tests = ViewBag.Tests as List<AVMLabs.Mvc.Models.Tests.TestResponseModel> ?? new();
+}
+
+<div class="container-fluid py-4">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <h2 class="mb-0">Create Work Order</h2>
+
+        <a href="/WorkOrders/Index" class="btn btn-secondary">
+            Back to Work Orders
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    <label class="form-label">Client</label>
+
+                    <div class="position-relative ng-select-wrapper">
+
+                        <input type="text"
+                               id="clientSearch"
+                               class="form-control pe-5"
+                               placeholder="Search or select client"
+                               autocomplete="off" />
+
+                        <button type="button"
+                                id="clearClient"
+                                class="btn btn-sm text-secondary position-absolute top-50 end-0 translate-middle-y me-1 p-0 px-2 d-none"
+                                title="Clear client">
+                            <span style="font-size: 22px; line-height: 1;">&times;</span>
+                        </button>
+
+                        <div id="clientDropdown"
+                             class="dropdown-menu w-100 p-0"
+                             style="max-height: 220px; overflow-y: auto;">
+                        </div>
+
+                    </div>
+
+                    <input type="hidden" id="clientId" />
+
+                    <div id="clientError" class="text-danger small"></div>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">NBL Status</label>
+
+                    <div id="nblStatus" class="pt-2">
+                        <span class="badge bg-secondary">
+                            Select a client
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+
+            <div id="nblWarning" class="alert alert-warning mt-3 d-none">
+                This client is Non-NBL. OST Test cannot be added.
+            </div>
+
+            <div class="mt-4 d-flex flex-wrap gap-2">
+
+                <button type="button"
+                        id="addTest"
+                        class="btn btn-primary"
+                        disabled>
+                    Add Test
+                </button>
+
+                <button type="button"
+                        id="addOstTest"
+                        class="btn btn-warning"
+                        disabled>
+                    Add OST Test
+                </button>
+
+            </div>
+
+            <div id="testRows" class="mt-3"></div>
+
+            <div class="row g-3 mt-2">
+
+                <div class="col-md-6">
+
+                    <label class="form-label">WO Date</label>
+
+                    <input type="date"
+                           id="woDate"
+                           class="form-control"
+                           value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+
+                    <div id="woDateError" class="text-danger small"></div>
+
+                </div>
+
+                <div class="col-md-6">
+
+                    <label class="form-label">Created By</label>
+
+                    <input type="text"
+                           id="createdBy"
+                           class="form-control"
+                           placeholder="Enter name" />
+
+                    <div id="createdByError" class="text-danger small"></div>
+
+                </div>
+
+            </div>
+
+            <div class="text-end mt-4">
+
+                <h5 class="mb-0">
+                    Total: ₹<span id="grandTotal">0.00</span>
+                </h5>
+
+            </div>
+
+            <div class="text-end mt-3">
+
+                <button type="button"
+                        id="submitWorkOrder"
+                        class="btn btn-success"
+                        disabled>
+
+                    <span id="submitSpinner"
+                          class="spinner-border spinner-border-sm d-none me-2">
+                    </span>
+
+                    <span id="submitText">
+                        Create Work Order
+                    </span>
+
+                </button>
+
+            </div>
+
+            <div id="workOrderMessage" class="mt-3"></div>
+
+        </div>
+    </div>
+
+</div>
+
+<div id="pageLoader"
+     class="position-fixed top-0 start-0 w-100 h-100 d-none"
+     style="background: rgba(255,255,255,.6); z-index: 1050;">
+
+    <div class="d-flex justify-content-center align-items-center h-100">
+
+        <div class="spinner-border text-primary" role="status"></div>
+
+    </div>
+
+</div>
+
+<style>
+
+    .ng-select-wrapper .dropdown-item {
+        cursor: pointer;
+    }
+
+    .ng-select-wrapper .dropdown-item:hover,
+    .ng-select-wrapper .dropdown-item.active {
+        background-color: #f0f4ff;
+    }
+
+    #clientDropdown.show {
+        display: block;
+    }
+
+    #clearClient {
+        border: 0;
+        background: transparent;
+    }
+
+    #clearClient:hover {
+        color: #dc3545 !important;
+    }
+
+</style>
+
+@section Scripts {
+
+    <script>
+
+        const apiBaseUrl = "@Configuration["ApiSettings:BaseUrl"]";
+
+        const clients = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+            clients,
+            new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+            }));
+
+        const tests = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+            tests,
+            new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+            }));
+
+        const clientSearch = document.getElementById("clientSearch");
+        const clientDropdown = document.getElementById("clientDropdown");
+        const clearClient = document.getElementById("clearClient");
+        const clientId = document.getElementById("clientId");
+        const clientError = document.getElementById("clientError");
+
+        const nblStatus = document.getElementById("nblStatus");
+        const nblWarning = document.getElementById("nblWarning");
+
+        const addTest = document.getElementById("addTest");
+        const addOstTest = document.getElementById("addOstTest");
+
+        const testRows = document.getElementById("testRows");
+        const grandTotal = document.getElementById("grandTotal");
+
+        const woDate = document.getElementById("woDate");
+        const createdBy = document.getElementById("createdBy");
+
+        const submitWorkOrder = document.getElementById("submitWorkOrder");
+        const submitSpinner = document.getElementById("submitSpinner");
+        const submitText = document.getElementById("submitText");
+
+        const workOrderMessage = document.getElementById("workOrderMessage");
+
+        let selectedClientIsNbl = false;
+
+        function renderClients(search = "") {
+
+            const filtered = clients.filter(x =>
+                x.clientName.toLowerCase().includes(search.toLowerCase())
+            );
+
+            clientDropdown.innerHTML = "";
+
+            if (!filtered.length) {
+
+                clientDropdown.innerHTML =
+                    '<div class="dropdown-item text-muted disabled">No clients found</div>';
+
+                return;
+            }
+
+            filtered.forEach(client => {
+
+                const button = document.createElement("button");
+
+                button.type = "button";
+                button.className = "dropdown-item";
+
+                if (String(client.clientId) === clientId.value)
+                    button.classList.add("active");
+
+                button.textContent = client.clientName;
+
+                button.addEventListener("mousedown", event => {
+
+                    event.preventDefault();
+
+                    selectClient(client);
+                });
+
+                clientDropdown.appendChild(button);
+            });
+        }
+
+        function selectClient(client) {
+
+            clientSearch.value = client.clientName;
+            clientId.value = client.clientId;
+
+            selectedClientIsNbl = client.isNbl === true;
+
+            clientError.textContent = "";
+
+            if (selectedClientIsNbl) {
+
+                nblStatus.innerHTML =
+                    '<span class="badge bg-success">NBL</span>';
+
+                nblWarning.classList.add("d-none");
+
+                addTest.disabled = false;
+                addOstTest.disabled = false;
+
+            }
+            else {
+
+                nblStatus.innerHTML =
+                    '<span class="badge bg-danger">Non-NBL</span>';
+
+                nblWarning.classList.remove("d-none");
+
+                addTest.disabled = false;
+                addOstTest.disabled = true;
+            }
+
+            clearClient.classList.remove("d-none");
+
+            clientDropdown.classList.remove("show");
+
+            testRows.innerHTML = "";
+
+            calculateTotal();
+            updateSubmitButton();
+
+            workOrderMessage.innerHTML = "";
+        }
+
+        function clearClientSelection() {
+
+            clientSearch.value = "";
+            clientId.value = "";
+
+            selectedClientIsNbl = false;
+
+            nblStatus.innerHTML =
+                '<span class="badge bg-secondary">Select a client</span>';
+
+            nblWarning.classList.add("d-none");
+
+            addTest.disabled = true;
+            addOstTest.disabled = true;
+
+            clearClient.classList.add("d-none");
+
+            testRows.innerHTML = "";
+
+            calculateTotal();
+            updateSubmitButton();
+
+            clientDropdown.classList.remove("show");
+
+            workOrderMessage.innerHTML = "";
+        }
+
+        clientSearch.addEventListener("focus", () => {
+
+            renderClients(clientSearch.value);
+
+            clientDropdown.classList.add("show");
+        });
+
+        clientSearch.addEventListener("input", () => {
+
+            clientId.value = "";
+
+            selectedClientIsNbl = false;
+
+            nblStatus.innerHTML =
+                '<span class="badge bg-secondary">Select a client</span>';
+
+            nblWarning.classList.add("d-none");
+
+            addTest.disabled = true;
+            addOstTest.disabled = true;
+
+            clearClient.classList.add("d-none");
+
+            renderClients(clientSearch.value);
+
+            clientDropdown.classList.add("show");
+
+            testRows.innerHTML = "";
+
+            calculateTotal();
+            updateSubmitButton();
+        });
+
+        clearClient.addEventListener("mousedown", event => {
+
+            event.preventDefault();
+
+            clearClientSelection();
+
+            clientSearch.focus();
+
+            renderClients();
+
+            clientDropdown.classList.add("show");
+        });
+
+        document.addEventListener("click", event => {
+
+            if (!clientSearch.parentElement.contains(event.target))
+                closeClientDropdownAndSync();
+        });
+
+        document.addEventListener("keydown", event => {
+
+            if (event.key === "Escape")
+                closeClientDropdownAndSync();
+        });
+
+        clientSearch.addEventListener("blur", () => {
+
+            setTimeout(() => {
+
+                if (!clientDropdown.matches(":hover"))
+                    closeClientDropdownAndSync();
+
+            }, 200);
+        });
+
+        function closeClientDropdownAndSync() {
+
+            clientDropdown.classList.remove("show");
+
+            if (clientId.value) {
+
+                const client = clients.find(
+                    x => String(x.clientId) === clientId.value
+                );
+
+                if (client)
+                    clientSearch.value = client.clientName;
+
+                clearClient.classList.remove("d-none");
+
+            }
+            else {
+
+                clientSearch.value = "";
+
+                clearClient.classList.add("d-none");
+            }
+        }
+
+        addTest.addEventListener("click", () => {
+
+            addTestRow(false);
+        });
+
+        addOstTest.addEventListener("click", () => {
+
+            if (!selectedClientIsNbl) {
+
+                workOrderMessage.innerHTML =
+                    '<div class="alert alert-danger">OST Test can only be added for an NBL client.</div>';
+
+                return;
+            }
+
+            addTestRow(true);
+        });
+
+        function addTestRow(isOst) {
+
+            const availableTests = tests.filter(
+                x => x.isOST === isOst
+            );
+
+            if (!availableTests.length) {
+
+                workOrderMessage.innerHTML =
+                    `<div class="alert alert-warning">No ${isOst ? "OST" : "normal"} tests available.</div>`;
+
+                return;
+            }
+
+            const row = document.createElement("div");
+
+            row.className =
+                "row g-2 align-items-end mb-3";
+
+            row.innerHTML = `
+                <div class="col-md-5">
+
+                    <label class="form-label">
+                        ${isOst ? "OST Test" : "Test"}
+                    </label>
+
+                    <select class="form-select test-select">
+
+                        <option value="">
+                            Select Test
+                        </option>
+
+                        ${availableTests.map(x =>
+                            `<option value="${x.testId}" data-rate="${x.rate}">${x.testName}</option>`
+                        ).join("")}
+
+                    </select>
+
+                </div>
+
+                <div class="col-md-2">
+
+                    <label class="form-label">
+                        Rate
+                    </label>
+
+                    <input type="text"
+                           class="form-control test-rate"
+                           value="0.00"
+                           readonly />
+
+                </div>
+
+                <div class="col-md-2">
+
+                    <label class="form-label">
+                        Quantity
+                    </label>
+
+                    <input type="number"
+                           class="form-control test-qty"
+                           value="1"
+                           min="1" />
+
+                </div>
+
+                <div class="col-md-2">
+
+                    <label class="form-label">
+                        Amount
+                    </label>
+
+                    <input type="text"
+                           class="form-control test-amount"
+                           value="0.00"
+                           readonly />
+
+                </div>
+
+                <div class="col-md-1">
+
+                    <button type="button"
+                            class="btn btn-danger remove-test"
+                            title="Remove test"
+                            style="width: 38px; height: 38px; padding: 0;">
+
+                        <span style="font-size: 24px; line-height: 1;">
+                            &times;
+                        </span>
+
+                    </button>
+
+                </div>
+
+                <div class="col-12">
+
+                    <div class="test-error text-danger small"></div>
+
+                </div>
+            `;
+
+            testRows.appendChild(row);
+
+            const select =
+                row.querySelector(".test-select");
+
+            const rate =
+                row.querySelector(".test-rate");
+
+            const qty =
+                row.querySelector(".test-qty");
+
+            const amount =
+                row.querySelector(".test-amount");
+
+            const testError =
+                row.querySelector(".test-error");
+
+            function validateRow() {
+
+                const testId =
+                    parseInt(select.value);
+
+                const quantity =
+                    parseInt(qty.value);
+
+                if (!testId) {
+
+                    testError.textContent =
+                        "Please select a test.";
+
+                    return false;
+                }
+
+                if (!quantity || quantity < 1) {
+
+                    testError.textContent =
+                        "Quantity must be at least 1.";
+
+                    return false;
+                }
+
+                testError.textContent = "";
+
+                return true;
+            }
+
+            function calculateAmount() {
+
+                const selected =
+                    select.options[select.selectedIndex];
+
+                const testRate =
+                    parseFloat(selected?.dataset.rate) || 0;
+
+                const quantity =
+                    parseInt(qty.value) || 0;
+
+                rate.value =
+                    testRate.toFixed(2);
+
+                amount.value =
+                    (testRate * quantity).toFixed(2);
+
+                validateRow();
+
+                calculateTotal();
+                updateSubmitButton();
+            }
+
+            select.addEventListener(
+                "change",
+                calculateAmount
+            );
+
+            qty.addEventListener(
+                "input",
+                calculateAmount
+            );
+
+            row.querySelector(".remove-test")
+                .addEventListener("click", () => {
+
+                    row.remove();
+
+                    calculateTotal();
+                    updateSubmitButton();
+                });
+
+            updateSubmitButton();
+        }
+
+        function calculateTotal() {
+
+            let total = 0;
+
+            document
+                .querySelectorAll(".test-amount")
+                .forEach(x => {
+
+                    total +=
+                        parseFloat(x.value) || 0;
+                });
+
+            grandTotal.textContent =
+                total.toFixed(2);
+        }
+
+        function updateSubmitButton() {
+
+            const rows =
+                document.querySelectorAll("#testRows > div");
+
+            if (
+                !clientId.value ||
+                !createdBy.value.trim() ||
+                !woDate.value ||
+                rows.length === 0
+            ) {
+
+                submitWorkOrder.disabled = true;
+
+                return;
+            }
+
+            const allValid =
+                Array.from(rows).every(row => {
+
+                    const testId =
+                        parseInt(
+                            row.querySelector(".test-select").value
+                        );
+
+                    const quantity =
+                        parseInt(
+                            row.querySelector(".test-qty").value
+                        );
+
+                    return testId > 0 && quantity > 0;
+                });
+
+            submitWorkOrder.disabled =
+                !allValid;
+        }
+
+        createdBy.addEventListener(
+            "input",
+            updateSubmitButton
+        );
+
+        woDate.addEventListener(
+            "change",
+            updateSubmitButton
+        );
+
+        submitWorkOrder.addEventListener(
+            "click",
+            async () => {
+
+                workOrderMessage.innerHTML = "";
+
+                clientError.textContent = "";
+
+                document.getElementById(
+                    "woDateError"
+                ).textContent = "";
+
+                document.getElementById(
+                    "createdByError"
+                ).textContent = "";
+
+                const rows =
+                    document.querySelectorAll(
+                        "#testRows > div"
+                    );
+
+                if (!clientId.value) {
+
+                    clientError.textContent =
+                        "Please select a client.";
+
+                    return;
+                }
+
+                if (!woDate.value) {
+
+                    document.getElementById(
+                        "woDateError"
+                    ).textContent =
+                        "WO date is required.";
+
+                    return;
+                }
+
+                if (!createdBy.value.trim()) {
+
+                    document.getElementById(
+                        "createdByError"
+                    ).textContent =
+                        "Created By is required.";
+
+                    return;
+                }
+
+                if (!rows.length) {
+
+                    workOrderMessage.innerHTML =
+                        '<div class="alert alert-danger">Please add at least one test.</div>';
+
+                    return;
+                }
+
+                const items = [];
+
+                for (const row of rows) {
+
+                    const testId =
+                        parseInt(
+                            row.querySelector(
+                                ".test-select"
+                            ).value
+                        );
+
+                    const quantity =
+                        parseInt(
+                            row.querySelector(
+                                ".test-qty"
+                            ).value
+                        );
+
+                    const testError =
+                        row.querySelector(
+                            ".test-error"
+                        );
+
+                    if (!testId) {
+
+                        testError.textContent =
+                            "Please select a test.";
+
+                        workOrderMessage.innerHTML =
+                            '<div class="alert alert-danger">Please complete all test rows.</div>';
+
+                        return;
+                    }
+
+                    if (!quantity || quantity < 1) {
+
+                        testError.textContent =
+                            "Quantity must be at least 1.";
+
+                        workOrderMessage.innerHTML =
+                            '<div class="alert alert-danger">Please enter a valid quantity for all tests.</div>';
+
+                        return;
+                    }
+
+                    items.push({
+                        testId: testId,
+                        quantity: quantity
+                    });
+                }
+
+                submitWorkOrder.disabled = true;
+
+                submitSpinner.classList.remove(
+                    "d-none"
+                );
+
+                submitText.textContent =
+                    "Creating...";
+
+                try {
+
+                    const response =
+                        await fetch(
+                            `${apiBaseUrl}api/workorders`,
+                            {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+                                body: JSON.stringify({
+                                    clientId: parseInt(
+                                        clientId.value
+                                    ),
+                                    woDate: woDate.value,
+                                    createdBy:
+                                        createdBy.value.trim(),
+                                    items: items
+                                })
+                            }
+                        );
+
+                    const result =
+                        await response.json();
+
+                    if (
+                        !response.ok ||
+                        !result.success
+                    ) {
+
+                        workOrderMessage.innerHTML =
+                            `<div class="alert alert-danger">${result.message || "Failed to create work order."}</div>`;
+
+                        submitWorkOrder.disabled =
+                            false;
+
+                        submitSpinner.classList.add(
+                            "d-none"
+                        );
+
+                        submitText.textContent =
+                            "Create Work Order";
+
+                        return;
+                    }
+
+                    document
+                        .getElementById("pageLoader")
+                        .classList.remove("d-none");
+
+                    window.location.href =
+                        "/WorkOrders/Index";
+
+                }
+                catch (error) {
+
+                    workOrderMessage.innerHTML =
+                        '<div class="alert alert-danger">Unable to connect to the API.</div>';
+
+                    submitWorkOrder.disabled =
+                        false;
+
+                    submitSpinner.classList.add(
+                        "d-none"
+                    );
+
+                    submitText.textContent =
+                        "Create Work Order";
+                }
+            }
+        );
+
+    </script>
+}

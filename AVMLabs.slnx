@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="AVMLabsDB.sql" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="AVMLabs.Api.Tests/AVMLabs.Api.Tests.csproj" Id="8d5cf146-d975-4dee-8221-cf07ad51ca74" />
+  <Project Path="AVMLabs.Api/AVMLabs.Api.csproj" />
+  <Project Path="AVMLabs.Mvc/AVMLabs.Mvc.csproj" Id="16fcbd16-dda0-4630-af27-66c3cd6952f4" />
+</Solution>

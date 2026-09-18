@@ -1,0 +1,212 @@
+﻿@model List<AVMLabs.Mvc.Models.WorkOrders.WorkOrderViewModel>
+@inject IConfiguration Configuration
+
+@{
+    ViewData["Title"] = "Work Orders";
+}
+
+<div class="container-fluid py-4">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <h2 class="mb-0">Work Orders</h2>
+
+        <a href="/WorkOrders/Create" class="btn btn-success">
+            <i class="bi bi-plus-lg me-1"></i>
+            Create Work Order
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>WO ID</th>
+                            <th>Client</th>
+                            <th>WO Date</th>
+                            <th>Total Amount</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    No work orders found.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var wo in Model)
+                            {
+                                <tr>
+                                    <td>#@wo.WOId</td>
+
+                                    <td>@wo.ClientName</td>
+
+                                    <td>@wo.WODate.ToString("dd-MM-yyyy")</td>
+
+                                    <td>₹@wo.TotalAmount.ToString("N2")</td>
+
+                                    <td>
+                                        @if (wo.Status == "Pending")
+                                        {
+                                            <span class="badge bg-secondary">@wo.Status</span>
+                                        }
+                                        else if (wo.Status == "Processing")
+                                        {
+                                            <span class="badge bg-primary">@wo.Status</span>
+                                        }
+                                        else if (wo.Status == "Reported")
+                                        {
+                                            <span class="badge bg-info">@wo.Status</span>
+                                        }
+                                        else if (wo.Status == "Billed")
+                                        {
+                                            <span class="badge bg-success">@wo.Status</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">@wo.Status</span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        @if (wo.Status != "Billed")
+                                        {
+                                            <div class="d-flex gap-2">
+                                                <select class="form-select form-select-sm status-select" data-id="@wo.WOId">
+                                                    @if (wo.Status == "Pending")
+                                                    {
+                                                        <option value="Processing">Processing</option>
+                                                    }
+                                                    else if (wo.Status == "Processing")
+                                                    {
+                                                        <option value="Reported">Reported</option>
+                                                    }
+                                                    else if (wo.Status == "Reported")
+                                                    {
+                                                        <option value="Billed">Billed</option>
+                                                    }
+                                                </select>
+
+                                                <button type="button" class="btn btn-sm btn-primary update-status" data-id="@wo.WOId">
+                                                    <span class="spinner-border spinner-border-sm d-none"></span>
+                                                    Update
+                                                </button>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Completed</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<div class="position-fixed top-0 end-0 p-3" style="z-index: 1100">
+    <div id="workOrderToast" class="toast" role="alert">
+        <div class="toast-header">
+            <strong class="me-auto" id="toastTitle">Success</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+
+        <div class="toast-body" id="toastMessage"></div>
+    </div>
+</div>
+
+<div id="pageLoader" class="position-fixed top-0 start-0 w-100 h-100 d-none" style="background: rgba(255,255,255,.6); z-index: 1050;">
+    <div class="d-flex justify-content-center align-items-center h-100">
+        <div class="spinner-border text-primary" role="status"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const apiBaseUrl = "@Configuration["ApiSettings:BaseUrl"]";
+
+        const toast = new bootstrap.Toast(document.getElementById("workOrderToast"));
+
+        function showToast(title, message, isError = false) {
+            const toastEl = document.getElementById("workOrderToast");
+
+            toastEl.classList.remove("text-bg-danger", "text-bg-success");
+            toastEl.classList.add(isError ? "text-bg-danger" : "text-bg-success");
+
+            document.getElementById("toastTitle").textContent = title;
+            document.getElementById("toastMessage").textContent = message;
+
+            toast.show();
+        }
+
+        function showLoader() {
+            document.getElementById("pageLoader").classList.remove("d-none");
+        }
+
+        function hideLoader() {
+            document.getElementById("pageLoader").classList.add("d-none");
+        }
+
+        document.querySelectorAll(".update-status").forEach(button => {
+            button.addEventListener("click", async () => {
+                const woId = button.dataset.id;
+                const select = document.querySelector(`.status-select[data-id="${woId}"]`);
+                const spinner = button.querySelector(".spinner-border");
+                const status = select.value;
+
+                if (!status)
+                    return;
+
+                button.disabled = true;
+                spinner.classList.remove("d-none");
+
+                try {
+                    const response = await fetch(`${apiBaseUrl}api/workorders/${woId}/status`, {
+                        method: "PATCH",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            status: status
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok || !result.success) {
+                        showToast("Error", result.message || "Unable to update work order status.", true);
+                        return;
+                    }
+
+                    showToast("Success", "Work order status updated successfully.");
+
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 700);
+                }
+                catch (error) {
+                    showToast("Error", "Unable to connect to the API.", true);
+                }
+                finally {
+                    button.disabled = false;
+                    spinner.classList.add("d-none");
+                }
+            });
+        });
+    </script>
+}
