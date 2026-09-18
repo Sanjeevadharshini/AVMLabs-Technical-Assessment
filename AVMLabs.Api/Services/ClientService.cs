@@ -189,11 +189,11 @@ namespace AVMLabs.Api.Services
                 throw new BusinessException("Email already exists.");
 
             client.ClientName = dto.ClientName;
-            client.ContactPerson = dto.ContactPerson;
-            client.Phone = dto.Phone;
-            client.Email = dto.Email;
-            client.City = dto.City;
-            client.Country = dto.Country;
+            client.ContactPerson = dto.ContactPerson ?? string.Empty;
+            client.Phone = dto.Phone ?? string.Empty;
+            client.Email = dto.Email ?? string.Empty;
+            client.City = dto.City ?? string.Empty;
+            client.Country = dto.Country ?? string.Empty;
             client.CreditLimit = dto.CreditLimit;
             client.UpdatedOn = DateTime.UtcNow;
 

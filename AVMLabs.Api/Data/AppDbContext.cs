@@ -23,7 +23,7 @@ namespace AVMLabs.Api.Data
 
             modelBuilder.Entity<Client>(entity =>
             {
-                entity.ToTable("Clients");
+                entity.ToTable("Clients", t => t.HasCheckConstraint("CK_Clients_CreditLimit", "[CreditLimit] > 0"));
 
                 entity.HasKey(x => x.ClientId);
 
@@ -32,7 +32,7 @@ namespace AVMLabs.Api.Data
                 entity.Property(x => x.Phone).HasMaxLength(20).IsRequired();
                 entity.Property(x => x.Email).HasMaxLength(150).IsRequired();
                 entity.Property(x => x.City).HasMaxLength(100).IsRequired();
-                entity.Property(x => x.Country).HasMaxLength(100).IsRequired(); 
+                entity.Property(x => x.Country).HasMaxLength(100).IsRequired();
                 entity.Property(x => x.CreditLimit).HasPrecision(18, 2);
                 entity.Property(x => x.IsActive).HasDefaultValue(true);
                 entity.Property(x => x.CreatedOn).HasColumnType("datetime2(0)").HasDefaultValueSql("SYSDATETIME()");
@@ -41,13 +41,15 @@ namespace AVMLabs.Api.Data
                 entity.HasIndex(x => x.Email).IsUnique();
                 entity.HasIndex(x => x.Country);
                 entity.HasIndex(x => x.ClientName);
-
-                entity.HasCheckConstraint("CK_Clients_CreditLimit", "[CreditLimit] > 0");
             });
 
             modelBuilder.Entity<Test>(entity =>
             {
-                entity.ToTable("Tests");
+                entity.ToTable("Tests", t =>
+                {
+                    t.HasCheckConstraint("CK_Tests_TATHours", "[TATHours] > 0");
+                    t.HasCheckConstraint("CK_Tests_Rate", "[Rate] >= 0");
+                });
 
                 entity.HasKey(x => x.TestId);
 
@@ -60,14 +62,15 @@ namespace AVMLabs.Api.Data
                 entity.Property(x => x.CreatedOn).HasColumnType("datetime2(0)").HasDefaultValueSql("SYSDATETIME()");
 
                 entity.HasIndex(x => x.TestCode).IsUnique();
-
-                entity.HasCheckConstraint("CK_Tests_TATHours", "[TATHours] > 0");
-                entity.HasCheckConstraint("CK_Tests_Rate", "[Rate] >= 0");
             });
 
             modelBuilder.Entity<WorkOrder>(entity =>
             {
-                entity.ToTable("WorkOrders");
+                entity.ToTable("WorkOrders", t =>
+                {
+                    t.HasCheckConstraint("CK_WorkOrders_Status", "[Status] IN ('Pending', 'Processing', 'Reported', 'Billed')");
+                    t.HasCheckConstraint("CK_WorkOrders_TotalAmount", "[TotalAmount] >= 0");
+                });
 
                 entity.HasKey(x => x.WOId);
 
@@ -80,15 +83,18 @@ namespace AVMLabs.Api.Data
                 entity.HasIndex(x => x.ClientId);
                 entity.HasIndex(x => x.WODate);
 
-                entity.HasCheckConstraint("CK_WorkOrders_Status", "[Status] IN ('Pending', 'Processing', 'Reported', 'Billed')");
-                entity.HasCheckConstraint("CK_WorkOrders_TotalAmount", "[TotalAmount] >= 0");
-
                 entity.HasOne(x => x.Client).WithMany(x => x.WorkOrders).HasForeignKey(x => x.ClientId).OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<WorkOrderItem>(entity =>
             {
-                entity.ToTable("WorkOrderItems");
+                entity.ToTable("WorkOrderItems", t =>
+                {
+                    t.HasCheckConstraint("CK_WorkOrderItems_Quantity", "[Quantity] > 0");
+                    t.HasCheckConstraint("CK_WorkOrderItems_Rate", "[Rate] >= 0");
+                    t.HasCheckConstraint("CK_WorkOrderItems_Amount", "[Amount] = [Quantity] * [Rate]");
+                    t.HasCheckConstraint("CK_WorkOrderItems_SampleStatus", "[SampleStatus] IN ('Received', 'InTransit')");
+                });
 
                 entity.HasKey(x => x.WOItemId);
 
@@ -101,18 +107,18 @@ namespace AVMLabs.Api.Data
                 entity.HasIndex(x => x.TestId);
                 entity.HasIndex(x => x.SampleStatus);
 
-                entity.HasCheckConstraint("CK_WorkOrderItems_Quantity", "[Quantity] > 0");
-                entity.HasCheckConstraint("CK_WorkOrderItems_Rate", "[Rate] >= 0");
-                entity.HasCheckConstraint("CK_WorkOrderItems_Amount", "[Amount] = [Quantity] * [Rate]");
-                entity.HasCheckConstraint("CK_WorkOrderItems_SampleStatus", "[SampleStatus] IN ('Received', 'InTransit')");
-
                 entity.HasOne(x => x.WorkOrder).WithMany(x => x.WorkOrderItems).HasForeignKey(x => x.WOId).OnDelete(DeleteBehavior.Cascade);
                 entity.HasOne(x => x.Test).WithMany(x => x.WorkOrderItems).HasForeignKey(x => x.TestId).OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<Invoice>(entity =>
             {
-                entity.ToTable("Invoices");
+                entity.ToTable("Invoices", t =>
+                {
+                    t.HasCheckConstraint("CK_Invoices_Status", "[Status] IN ('Pending', 'Paid', 'Overdue')");
+                    t.HasCheckConstraint("CK_Invoices_TotalAmount", "[TotalAmount] >= 0");
+                    t.HasCheckConstraint("CK_Invoices_DueDate", "[DueDate] >= [InvoiceDate]");
+                });
 
                 entity.HasKey(x => x.InvoiceId);
 
@@ -125,17 +131,19 @@ namespace AVMLabs.Api.Data
                 entity.HasIndex(x => x.ClientId);
                 entity.HasIndex(x => x.WOId);
 
-                entity.HasCheckConstraint("CK_Invoices_Status", "[Status] IN ('Pending', 'Paid', 'Overdue')");
-                entity.HasCheckConstraint("CK_Invoices_TotalAmount", "[TotalAmount] >= 0");
-                entity.HasCheckConstraint("CK_Invoices_DueDate", "[DueDate] >= [InvoiceDate]");
-
                 entity.HasOne(x => x.Client).WithMany(x => x.Invoices).HasForeignKey(x => x.ClientId).OnDelete(DeleteBehavior.Restrict);
                 entity.HasOne(x => x.WorkOrder).WithMany().HasForeignKey(x => x.WOId).OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<Payment>(entity =>
             {
-                entity.ToTable("Payments");
+                entity.ToTable("Payments", t =>
+                {
+                    t.HasCheckConstraint("CK_Payments_Amount", "[Amount] > 0");
+                    t.HasCheckConstraint("CK_Payments_Mode", "[Mode] IN ('Cash', 'Cheque', 'Online')");
+                    t.HasCheckConstraint("CK_Payments_GatewayFee", "[GatewayFee] >= 0");
+                    t.HasCheckConstraint("CK_Payments_NetAmount", "[NetAmount] >= 0");
+                });
 
                 entity.HasKey(x => x.PaymentId);
 
@@ -148,11 +156,6 @@ namespace AVMLabs.Api.Data
 
                 entity.HasIndex(x => x.InvoiceId);
                 entity.HasIndex(x => x.PaymentDate);
-
-                entity.HasCheckConstraint("CK_Payments_Amount", "[Amount] > 0");
-                entity.HasCheckConstraint("CK_Payments_Mode", "[Mode] IN ('Cash', 'Cheque', 'Online')");
-                entity.HasCheckConstraint("CK_Payments_GatewayFee", "[GatewayFee] >= 0");
-                entity.HasCheckConstraint("CK_Payments_NetAmount", "[NetAmount] >= 0");
 
                 entity.HasOne(x => x.Invoice).WithMany(x => x.Payments).HasForeignKey(x => x.InvoiceId).OnDelete(DeleteBehavior.Restrict);
             });

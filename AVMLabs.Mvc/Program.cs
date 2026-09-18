@@ -26,7 +26,7 @@ app.UseRouting();
 
 app.UseAuthorization();
 
-app.UseStatusCodePagesWithReExecute("/Home/NotFound");
+app.UseStatusCodePagesWithReExecute("/Home/PageNotFound");
 
 app.MapStaticAssets();
 

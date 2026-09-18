@@ -9,7 +9,7 @@ namespace AVMLabs.Mvc.Controllers
             return View();
         }
 
-        public IActionResult NotFound()
+        public IActionResult PageNotFound()
         {
             return View();
         }
